@@ -1,10 +1,16 @@
-import { AppShell } from "@/components/app-shell";
+import { redirect } from "next/navigation";
 
-export default function AppLayout({
+import { AppShell } from "@/components/app-shell";
+import { getDb } from "@/db/client";
+import { isAuthenticated, isPasswordSet } from "@/server/auth";
+
+export default async function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // TODO(phase-2): gate this group behind the session cookie
+  const db = getDb();
+  if (!isPasswordSet(db)) redirect("/setup");
+  if (!(await isAuthenticated(db))) redirect("/");
   return <AppShell>{children}</AppShell>;
 }

@@ -14,15 +14,55 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MotionButton } from "@/components/ui/motion-button"
+import { errorCode } from "@/server/http"
+
+const ERROR_MESSAGES: Record<string, string> = {
+  invalid_password: "Incorrect password.",
+  password_required: "Enter your password.",
+  password_too_short: "Use at least 8 characters.",
+  password_already_set: "Password is already set — log in instead.",
+  password_not_set: "No password yet — create one first.",
+}
 
 export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
   const router = useRouter()
   const isSetup = mode === "setup"
+  const [error, setError] = React.useState<string | null>(null)
+  const [pending, setPending] = React.useState(false)
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    // TODO(phase-2): call /api/auth/login or /api/auth/setup, then redirect
-    router.push("/dashboard")
+    const form = event.currentTarget
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value
+
+    if (isSetup) {
+      const confirm = (form.elements.namedItem("confirm") as HTMLInputElement).value
+      if (password !== confirm) {
+        setError("Passwords do not match.")
+        return
+      }
+    }
+
+    setPending(true)
+    setError(null)
+    try {
+      const res = await fetch(isSetup ? "/api/auth/setup" : "/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password }),
+      })
+      if (!res.ok) {
+        const code = errorCode(await res.json().catch(() => null))
+        setError((code && ERROR_MESSAGES[code]) ?? "Something went wrong. Try again.")
+        return
+      }
+      router.replace("/dashboard")
+      router.refresh()
+    } catch {
+      setError("Could not reach the server. Try again.")
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -44,6 +84,7 @@ export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
               type="password"
               required
               minLength={8}
+              autoFocus
               autoComplete={isSetup ? "new-password" : "current-password"}
             />
           </div>
@@ -59,8 +100,13 @@ export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
               />
             </div>
           )}
-          <MotionButton type="submit" className="w-full">
-            {isSetup ? "Create password" : "Log in"}
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <MotionButton type="submit" className="w-full" disabled={pending}>
+            {pending ? "Please wait…" : isSetup ? "Create password" : "Log in"}
           </MotionButton>
           <p className="text-center text-xs text-muted-foreground">
             {isSetup ? (
