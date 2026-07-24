@@ -1,0 +1,26 @@
+# specs & plans (local only)
+agents/
+
+# local data: sqlite db + uploaded statements
+data/
+*.db
+
+# dependencies
+node_modules/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# next.js
+.next/
+out/
+
+# misc
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
