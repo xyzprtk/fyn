@@ -1,0 +1,21 @@
+{
+  "name": "fyn",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.24.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "concurrently -n web,parser -c blue,magenta \"pnpm --dir app dev\" \"pnpm parser\"",
+    "parser": "cd parser && .venv/bin/uvicorn main:app --port 8000 --reload",
+    "setup": "node scripts/setup.mjs",
+    "migrate": "pnpm --dir app db:migrate",
+    "test": "pnpm --dir app test && pnpm test:parser",
+    "test:parser": "cd parser && .venv/bin/pytest"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
