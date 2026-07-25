@@ -1,0 +1,8 @@
+State Bank of India,,,,,,
+Account Number: 00000012345678901,,,,,,
+,,,,,,
+Txn Date,Value Date,Description,Ref No./Cheque No.,Debit,Credit,Balance
+01-Jun-2026,01-Jun-2026,UPI-FLIPKART,UTR999888777,"2,499.00",,"73,501.00"
+03-Jun-2026,03-Jun-2026,IRCTC TICKET,UTR111000111,"1,845.50",,"71,655.50"
+05-Jun-2026,05-Jun-2026,SALARY CREDIT,-,,"95,000.00","1,66,655.50"
+06-Jun-2026,06-Jun-2026,ATM CASH WDL,ATM123456,"10,000.00",,"1,56,655.50"
