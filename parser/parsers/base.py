@@ -189,12 +189,13 @@ def _norm_header(cell: str) -> str:
 
 def _find_col(headers: list[str], aliases: tuple[str, ...]) -> int | None:
     """Find a column index by alias: exact, then prefix-word, then
-    containment (long aliases only, so "dr" can't match "drawn")."""
+    containment. Fuzzy passes ignore short aliases (< 3 chars) so a bare
+    "dr" can't swallow a trailing "Dr/Cr" direction column."""
     for i, header in enumerate(headers):
         if header in aliases:
             return i
     for i, header in enumerate(headers):
-        if any(header.startswith(alias + " ") for alias in aliases):
+        if any(len(alias) >= 3 and header.startswith(alias + " ") for alias in aliases):
             return i
     for i, header in enumerate(headers):
         if any(len(alias) >= 4 and alias in header for alias in aliases):

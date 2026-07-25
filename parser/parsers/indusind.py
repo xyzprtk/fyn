@@ -1,8 +1,10 @@
 """IndusInd Bank statement profile.
 
-Known layouts (netbanking CSV / e-statement PDF): "Date, Particulars,
-Chq/Ref No., Debit, Credit, Balance" with dd-mm-yyyy or dd-MMM-yyyy dates.
-To be validated against a real redacted statement.
+Validated against a real redacted statement (2026-07, "Indie" format): the
+table is "Date, Particulars, Chq No/Ref No, Withdrawal, Deposit, Balance"
+with "27 Jun 2026" style dates. Narrations are long UPI strings that wrap
+across lines — pdf cell text is collapsed by clean_description. The Branch
+IFSC (INDB...) anchors detection.
 """
 
 from parsers.base import BankProfile
@@ -13,17 +15,17 @@ PROFILE = BankProfile(
     aliases={
         "date": ("date", "transaction date", "txn date", "value date", "posting date"),
         "desc": ("particulars", "description", "narration", "transaction details", "details", "remarks"),
-        "ref": ("chq ref no", "ref no", "reference number", "cheque no", "instrument no"),
-        "debit": ("debit", "debit amount", "withdrawal", "withdrawal dr", "withdrawals", "dr"),
-        "credit": ("credit", "credit amount", "deposit", "deposit cr", "deposits", "cr"),
+        "ref": ("chq no ref no", "chq ref no", "ref no", "reference number", "cheque no", "instrument no"),
+        "debit": ("withdrawal", "withdrawals", "debit", "debit amount", "withdrawal dr", "dr"),
+        "credit": ("deposit", "deposits", "credit", "credit amount", "deposit cr", "cr"),
         "balance": ("balance", "running balance", "closing balance", "available balance", "balance amount"),
     },
     detect_aliases={
         "date": ("date",),
         "desc": ("particulars",),
-        "ref": ("chq ref no",),
-        "debit": ("debit",),
-        "credit": ("credit",),
+        "ref": ("chq no ref no", "chq ref no"),
+        "debit": ("withdrawal",),
+        "credit": ("deposit",),
     },
-    date_formats=("%d-%m-%Y", "%d/%m/%Y", "%d-%b-%Y", "%d %b %Y"),
+    date_formats=("%d %b %Y", "%d-%m-%Y", "%d/%m/%Y", "%d-%b-%Y"),
 )

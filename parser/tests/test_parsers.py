@@ -35,10 +35,10 @@ class TestBankFixtures:
         bank, outcome = parse_fixture("federal.csv")
         assert bank == "federal"
         assert as_tuples(outcome) == [
-            (date(2026, 6, 3), "UPI-SWIGGY BANGALORE", -450.0, "debit", 51650.0, "UTR123456789", []),
-            (date(2026, 6, 5), "SALARY ACME CORP", 85000.0, "credit", 136650.0, "SAL202606051", []),
-            (date(2026, 6, 7), "AMAZON PAY INDIA", -1299.0, "debit", 135351.0, "UTR987654321", []),
-            (date(2026, 6, 10), "UPI-UBER RIDES", -210.5, "debit", 0.0, "UTR456789123", ["balance_mismatch"]),
+            (date(2026, 6, 25), "UPIOUT/654240549874/q707628024@ybl/UPI/5814", -55.0, "debit", 232.80, "654240549874", []),
+            (date(2026, 6, 27), "SBINT:28-03-2026 to 26-06-2026[77770111748717]", 19.0, "credit", 251.80, "77770111748717", []),
+            (date(2026, 6, 27), "UPI IN/561043065223/user@ybl/Pay/0000", 2000.0, "credit", 2251.80, "561043065223", []),
+            (date(2026, 6, 28), "AMAZON PAY", -1299.0, "debit", 0.0, None, ["balance_mismatch"]),
         ]
         assert outcome.warnings == ["2 header/footer artifact row(s) skipped"]
 
@@ -46,10 +46,10 @@ class TestBankFixtures:
         bank, outcome = parse_fixture("indusind.csv")
         assert bank == "indusind"
         assert as_tuples(outcome) == [
-            (date(2026, 6, 1), "UPI/ZOMATO/ORDER", -1050.0, "debit", 48950.0, "UTR111222333", []),
-            (date(2026, 6, 2), "NEFT SALARY CREDIT", 62500.0, "credit", 111450.0, "NEFT000123", []),
-            (date(2026, 6, 4), "RENT TRANSFER", -26450.0, "debit", 85000.0, None, []),
-            (date(2026, 6, 5), "", -100.0, "debit", 84900.0, "UTR555666777", ["empty_description"]),
+            (date(2026, 6, 24), "UPI/ZOMATO/ORDER", -1050.0, "debit", 48950.0, "UTR111222333", []),
+            (date(2026, 6, 25), "NEFT SALARY CREDIT", 62500.0, "credit", 111450.0, "NEFT000123", []),
+            (date(2026, 6, 26), "RENT TRANSFER", -26450.0, "debit", 85000.0, None, []),
+            (date(2026, 6, 27), "", -100.0, "debit", 84900.0, "S63268713", ["empty_description"]),
         ]
         assert outcome.warnings == []
 
@@ -166,17 +166,17 @@ class TestPdf:
     def test_federal_pdf(self):
         pdf_bytes = make_table_pdf(
             [
-                ["Transaction Date", "Value Date", "Narration", "Reference Number", "Withdrawal", "Deposit", "Balance"],
-                ["03-06-2026", "03-06-2026", "UPI-SWIGGY", "UTR123456789", "450.00", "", "51,650.00"],
-                ["05-06-2026", "05-06-2026", "SALARY ACME", "SAL202606051", "", "85,000.00", "1,36,650.00"],
+                ["Date", "Value Date", "Particulars", "Tran Type", "Cheque Details", "Withdrawals", "Deposits", "Balance", "Dr/Cr"],
+                ["25/06/2026", "25/06/2026", "UPIOUT/65424054", "TFR", "UTR123456", "55.00", "", "232.80", "Dr"],
+                ["27/06/2026", "27/06/2026", "UPI IN/56104306", "TFR", "", "", "2,000.00", "2,232.80", "Cr"],
             ],
-            title="Federal Bank - Account Statement",
+            title="Federal Bank - IFSC: FDRL0007777",
         )
         raw = extract("pdf", pdf_bytes, "federal.pdf")
         parser = resolve(None, raw)
         assert parser.bank == "federal"
         outcome = parser.parse(raw)
         assert as_tuples(outcome) == [
-            (date(2026, 6, 3), "UPI-SWIGGY", -450.0, "debit", 51650.0, "UTR123456789", []),
-            (date(2026, 6, 5), "SALARY ACME", 85000.0, "credit", 136650.0, "SAL202606051", []),
+            (date(2026, 6, 25), "UPIOUT/65424054", -55.0, "debit", 232.80, "UTR123456", []),
+            (date(2026, 6, 27), "UPI IN/56104306", 2000.0, "credit", 2232.80, None, []),
         ]

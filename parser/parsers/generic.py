@@ -25,7 +25,7 @@ from models import RawDoc
 _ALIASES = {
     "date": ("date", "transaction date", "txn date", "value date", "posting date", "when", "day"),
     "desc": ("description", "narration", "particulars", "details", "remarks", "memo", "payee", "merchant", "what"),
-    "ref": ("reference", "reference number", "ref", "ref no", "utr", "cheque no", "transaction id"),
+    "ref": ("reference", "reference number", "ref", "ref no", "utr", "cheque no", "cheque details", "transaction id"),
     "debit": ("debit", "debit amount", "withdrawal", "withdrawal dr", "paid out", "money out", "spent", "dr"),
     "credit": ("credit", "credit amount", "deposit", "deposit cr", "paid in", "money in", "received", "cr"),
     "amount": ("amount", "transaction amount", "amt", "value", "how much", "sum"),

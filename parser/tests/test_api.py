@@ -31,17 +31,17 @@ def test_parse_federal_contract():
 
     body = res.json()
     assert body["bank"] == "federal"
-    assert body["period"] == {"from": "2026-06-03", "to": "2026-06-10"}
+    assert body["period"] == {"from": "2026-06-25", "to": "2026-06-28"}
     assert len(body["rows"]) == 4
 
     first = body["rows"][0]
     assert first == {
-        "date": "2026-06-03",
-        "description": "UPI-SWIGGY BANGALORE",
-        "amount": -450.0,
+        "date": "2026-06-25",
+        "description": "UPIOUT/654240549874/q707628024@ybl/UPI/5814",
+        "amount": -55.0,
         "type": "debit",
-        "balance": 51650.0,
-        "reference": "UTR123456789",
+        "balance": 232.80,
+        "reference": "654240549874",
         "flags": [],
     }
 

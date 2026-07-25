@@ -1,8 +1,11 @@
 """Federal Bank statement profile.
 
-Known layouts (FedNet CSV / PDF): "Transaction Date, Value Date, Narration,
-Reference Number, Withdrawal, Deposit, Balance" with dd-mm-yyyy dates.
-To be validated against a real redacted statement.
+Validated against a real redacted statement (2026-07): the table is
+"Date, Value Date, Particulars, Tran Type, Cheque Details, Withdrawals,
+Deposits, Balance, Dr/Cr" with dd/mm/yyyy dates. The trailing Dr/Cr column
+marks the transaction's direction (verified via the balance chain) and is
+ignored — Withdrawals/Deposits already carry it. The preamble holds the
+IFSC (FDRL...) which anchors detection.
 """
 
 from parsers.base import BankProfile
@@ -11,19 +14,19 @@ PROFILE = BankProfile(
     bank="federal",
     markers=("federal bank", "fednet", "fdrl0"),
     aliases={
-        "date": ("transaction date", "date", "txn date", "tran date", "value date"),
-        "desc": ("narration", "description", "particulars", "details", "remarks"),
-        "ref": ("reference number", "reference no", "ref no", "cheque no", "chq ref no"),
-        "debit": ("withdrawal", "withdrawals", "withdrawal dr", "debit", "debit amount"),
-        "credit": ("deposit", "deposits", "deposit cr", "credit", "credit amount"),
+        "date": ("date", "transaction date", "txn date", "tran date", "value date"),
+        "desc": ("particulars", "narration", "description", "details", "remarks"),
+        "ref": ("cheque details", "reference number", "reference no", "ref no", "cheque no", "chq ref no"),
+        "debit": ("withdrawals", "withdrawal", "withdrawal dr", "debit", "debit amount"),
+        "credit": ("deposits", "deposit", "deposit cr", "credit", "credit amount"),
         "balance": ("balance", "running balance", "closing balance", "balance amount"),
     },
     detect_aliases={
-        "date": ("transaction date",),
-        "desc": ("narration",),
-        "ref": ("reference number",),
-        "debit": ("withdrawal",),
-        "credit": ("deposit",),
+        "date": ("date",),
+        "desc": ("particulars",),
+        "ref": ("cheque details",),
+        "debit": ("withdrawals", "withdrawal"),
+        "credit": ("deposits", "deposit"),
     },
-    date_formats=("%d-%m-%Y", "%d/%m/%Y", "%d-%b-%Y"),
+    date_formats=("%d/%m/%Y", "%d-%m-%Y", "%d-%b-%Y"),
 )
