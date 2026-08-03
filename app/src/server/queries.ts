@@ -1,10 +1,14 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 
 import type { DB } from "@/db/client";
 import { accounts, imports, transactions } from "@/db/schema";
 import type { BankKey } from "@/lib/banks";
 
 export type Account = typeof accounts.$inferSelect;
+export type RecentTransaction = {
+  transaction: typeof transactions.$inferSelect;
+  accountName: string;
+};
 
 export type AccountInput = {
   name: string;
@@ -62,4 +66,14 @@ export function deleteAccount(db: DB, id: number): Account | undefined {
     tx.delete(imports).where(eq(imports.accountId, id)).run();
     return tx.delete(accounts).where(eq(accounts.id, id)).returning().get();
   });
+}
+
+export function listRecentTransactions(db: DB, limit = 50): RecentTransaction[] {
+  return db
+    .select({ transaction: transactions, accountName: accounts.name })
+    .from(transactions)
+    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+    .orderBy(desc(transactions.date), desc(transactions.id))
+    .limit(limit)
+    .all();
 }
