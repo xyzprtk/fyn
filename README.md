@@ -42,9 +42,38 @@ First run redirects to `/setup` to create a local password.
 
 Parser API docs (while running): http://localhost:8000/docs
 
+## First-run checklist
+
+1. Run `pnpm install && pnpm setup && pnpm dev`.
+2. Open `http://localhost:3000` and set the local password.
+3. Open Settings and add an account with its bank parser hint.
+4. Upload a PDF, CSV, XLSX, or XLS statement and review the staging rows.
+5. Exclude or correct flagged rows, then save the import.
+6. Use Dashboard filters to inspect the period and account; use Transactions for edits.
+
+The parser and database are both local services. The browser talks only to Next.js;
+the raw statement is retained under `data/uploads/<YYYY-MM>/` after a successful save.
+
+## Adding a bank in v2
+
+Bank support is add-only. Add a profile in `parser/parsers/<bank>.py`, register it
+in `parser/parsers/registry.py`, and add a small redacted fixture plus exact parser
+tests under `parser/tests/fixtures/` and `parser/tests/`. Keep the normalized row
+contract unchanged: the web app does not need a schema migration for a new bank.
+
+Validate a new profile against a real redacted statement before shipping. If the
+layout is uncertain, keep questionable rows in staging with flags rather than
+silently dropping them.
+
 ## Troubleshooting
 
 - **`better-sqlite3` build errors** — prebuilt binaries cover Node ≥ 20; if your
   platform misses one, run `pnpm --dir app rebuild better-sqlite3`.
 - **Parser unreachable** — the web app expects uvicorn on `:8000`; `pnpm dev`
-  starts both. Check `parser/.venv` exists (re-run `pnpm setup`).
+  starts both. The Upload page shows a retry action when it cannot reach the parser.
+  Check `parser/.venv` exists (re-run `pnpm setup`).
+- **Fresh local database** — remove `data/fyn.db`, then run `pnpm setup` to apply
+  migrations and seed the default category rules again. Do not delete `data/uploads/`
+  unless you also want to remove retained statements.
+- **Testing an isolated database** — set `FYN_DB_PATH=/tmp/fyn.db` for setup and
+  development. This keeps acceptance checks away from your normal local ledger.

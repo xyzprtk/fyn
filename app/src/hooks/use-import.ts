@@ -42,11 +42,18 @@ export function useParseStatement() {
       const form = new FormData()
       form.append("accountId", String(accountId))
       form.append("file", file)
-      const response = await fetch("/api/parse", {
-        method: "POST",
-        body: form,
-      })
-      if (!response.ok) return requestError(response)
+      let response: Response
+      try {
+        response = await fetch("/api/parse", {
+          method: "POST",
+          body: form,
+        })
+      } catch {
+        throw new Error("parser_unreachable")
+      }
+      if (!response.ok) {
+        return requestError(response)
+      }
       return (await response.json()) as ParseResult
     },
   })

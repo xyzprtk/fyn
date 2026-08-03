@@ -56,8 +56,7 @@ export default function UploadPage() {
     setError(null)
   }
 
-  function handleParse(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function parseFile() {
     setError(null)
     setSuccess(null)
     if (!selectedAccount) {
@@ -80,9 +79,14 @@ export default function UploadPage() {
           setParseResult(result)
           setRows(stagingRows(result))
         },
-        onError: (parseError) => setError(parseError.message),
+        onError: (parseError) => setError(parseError.message === "parser_unreachable" ? "Parser service unreachable - is pnpm dev running?" : parseError.message),
       },
     )
+  }
+
+  function handleParse(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    parseFile()
   }
 
   function updateRow(id: string, patch: Partial<StagingRow>) {
@@ -229,7 +233,12 @@ export default function UploadPage() {
         </div>
       )}
 
-      {error && <p role="alert" className="border-l-2 border-destructive px-3 py-2 text-sm text-destructive">{error}</p>}
+      {error && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-destructive px-3 py-2 text-sm text-destructive">
+          <span>{error}</span>
+          {file && selectedAccount && <Button type="button" variant="outline" size="sm" onClick={parseFile} disabled={parseStatement.isPending}>Retry parse</Button>}
+        </div>
+      )}
       {success && (
         <p role="status" className="border-l-2 border-success px-3 py-2 text-sm text-success">
           {success} <Link className="underline underline-offset-4" href="/transactions">View transactions</Link>
