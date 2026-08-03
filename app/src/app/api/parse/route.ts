@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { getDb } from "@/db/client";
+import { isBankKey } from "@/lib/banks";
 import { getAccount } from "@/server/queries";
 import { isAuthenticated } from "@/server/auth";
 import { jsonError } from "@/server/http";
@@ -33,8 +34,12 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const file = form.get("file");
   const accountId = parseAccountId(form.get("accountId"));
+  const bankValue = form.get("bank");
   if (!(file instanceof File)) return jsonError(400, "file_required");
   if (!accountId) return jsonError(400, "invalid_account");
+  if (bankValue !== null && (typeof bankValue !== "string" || (bankValue !== "auto" && !isBankKey(bankValue)))) {
+    return jsonError(400, "invalid_bank");
+  }
 
   const account = getAccount(db, accountId);
   if (!account) return jsonError(404, "account_not_found");
@@ -58,7 +63,8 @@ export async function POST(request: Request) {
     new Blob([bytes], { type: file.type || "application/octet-stream" }),
     filename,
   );
-  parserForm.append("bank", account.bank);
+  const bankHint = typeof bankValue === "string" && bankValue !== "auto" ? bankValue : null;
+  if (bankHint) parserForm.append("bank", bankHint);
 
   try {
     const parserUrl = process.env.PARSER_URL ?? "http://127.0.0.1:8000/parse";

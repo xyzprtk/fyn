@@ -9,18 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useAccounts } from "@/hooks/use-accounts"
 import { useCommitImport, useParseStatement } from "@/hooks/use-import"
 import { type Category } from "@/lib/categories"
 import type { ParseResult, StagingRow } from "@/lib/import-types"
-import { bankLabel } from "@/lib/banks"
+import { BANKS, bankLabel, type BankKey } from "@/lib/banks"
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
@@ -39,13 +32,15 @@ export default function UploadPage() {
   const parseStatement = useParseStatement()
   const commitImport = useCommitImport()
   const [accountId, setAccountId] = React.useState("")
+  const [bankHint, setBankHint] = React.useState<BankKey | "auto">("auto")
   const [file, setFile] = React.useState<File | null>(null)
   const [parseResult, setParseResult] = React.useState<ParseResult | null>(null)
   const [rows, setRows] = React.useState<StagingRow[]>([])
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
 
-  const selectedAccount = accounts.data?.find((account) => String(account.id) === accountId)
+  const effectiveAccountId = accountId || (accounts.data?.length === 1 ? String(accounts.data[0].id) : "")
+  const selectedAccount = accounts.data?.find((account) => String(account.id) === effectiveAccountId)
 
   function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const nextFile = event.target.files?.[0] ?? null
@@ -73,7 +68,7 @@ export default function UploadPage() {
     }
 
     parseStatement.mutate(
-      { accountId: selectedAccount.id, file },
+      { accountId: selectedAccount.id, file, ...(bankHint === "auto" ? {} : { bank: bankHint }) },
       {
         onSuccess: (result) => {
           setParseResult(result)
@@ -157,24 +152,22 @@ export default function UploadPage() {
           <CardDescription>PDF, CSV, XLSX or XLS files up to 10 MB.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleParse} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <form onSubmit={handleParse} className="grid gap-5 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <div className="grid gap-1.5">
-              <Label htmlFor="import-account">Account</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger id="import-account" className="w-full">
-                  <SelectValue placeholder={accounts.isPending ? "Loading accounts..." : "Choose an account"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.data?.map((account) => (
-                    <SelectItem key={account.id} value={String(account.id)}>
-                      {account.name} ({bankLabel(account.bank)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedAccount && (
-                <p className="text-[11px] text-muted-foreground">Parser hint: {bankLabel(selectedAccount.bank)}</p>
-              )}
+              <Label htmlFor="import-account">Save to account</Label>
+              <select id="import-account" value={effectiveAccountId} onChange={(event) => setAccountId(event.target.value)} className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/50">
+                <option value="" disabled>{accounts.isPending ? "Loading accounts..." : "Choose an account"}</option>
+                {accounts.data?.map((account) => <option key={account.id} value={String(account.id)}>{account.name} ({bankLabel(account.bank)})</option>)}
+              </select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="parser-bank">Bank parser</Label>
+              <select id="parser-bank" value={bankHint} onChange={(event) => setBankHint(event.target.value as BankKey | "auto")} className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/50">
+                <option value="auto">Auto-detect from file</option>
+                {BANKS.filter((bank) => bank.key !== "generic").map((bank) => <option key={bank.key} value={bank.key}>{bank.label}</option>)}
+                <option value="generic">Generic / other</option>
+              </select>
+              <p className="text-[11px] text-muted-foreground">Use a hint only when auto-detect needs help.</p>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="statement-file">Statement file</Label>
@@ -192,7 +185,13 @@ export default function UploadPage() {
             </Button>
           </form>
 
-          {!accounts.isPending && accounts.data?.length === 0 && (
+          {accounts.isError && (
+            <div className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-5">
+              <p className="text-sm text-destructive">Could not load accounts.</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => void accounts.refetch()}>Retry accounts</Button>
+            </div>
+          )}
+          {!accounts.isPending && !accounts.isError && accounts.data?.length === 0 && (
             <div className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-5">
               <p className="text-sm text-muted-foreground">Add an account before importing its statement.</p>
               <Button asChild variant="outline" size="sm">
@@ -213,6 +212,12 @@ export default function UploadPage() {
                 {parseResult.rows.length} parsed row{parseResult.rows.length === 1 ? "" : "s"}
                 {parseResult.period ? ` from ${parseResult.period.from} to ${parseResult.period.to}` : ""}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground">Detected parser: <span className="font-medium text-foreground">{bankLabel(parseResult.bank)}</span></p>
+              {selectedAccount && parseResult.bank !== selectedAccount.bank && (
+                <p className="mt-2 border border-warning/30 bg-warning/5 px-2 py-1.5 text-xs text-warning">
+                  This file looks like {bankLabel(parseResult.bank)}, but it will be saved to {selectedAccount.name} ({bankLabel(selectedAccount.bank)}). Check the destination account before saving.
+                </p>
+              )}
             </div>
             <Button onClick={commitRows} disabled={commitImport.isPending || rows.length === 0}>
               {commitImport.isPending ? "Saving..." : "Save included rows"}

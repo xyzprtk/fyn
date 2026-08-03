@@ -8,6 +8,7 @@ import type { ParseResult } from "@/lib/import-types"
 type ParseInput = {
   accountId: number
   file: File
+  bank?: string
 }
 
 type CommitInput = {
@@ -38,10 +39,11 @@ async function requestError(response: Response): Promise<never> {
 
 export function useParseStatement() {
   return useMutation({
-    mutationFn: async ({ accountId, file }: ParseInput): Promise<ParseResult> => {
+    mutationFn: async ({ accountId, file, bank }: ParseInput): Promise<ParseResult> => {
       const form = new FormData()
       form.append("accountId", String(accountId))
       form.append("file", file)
+      if (bank) form.append("bank", bank)
       let response: Response
       try {
         response = await fetch("/api/parse", {
