@@ -66,8 +66,8 @@ function main() {
     if (result.changes > 0) inserted += 1;
   }
   const skipped = DEFAULT_RULES.length - inserted;
-  console.log(
-    `seed: ${inserted} category rules inserted, ${skipped} already present`,
+  process.stdout.write(
+    `seed: ${inserted} category rules inserted, ${skipped} already present\n`,
   );
 }
 

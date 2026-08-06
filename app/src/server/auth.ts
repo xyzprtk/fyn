@@ -85,8 +85,6 @@ export const sessionCookieOptions = {
   maxAge: SESSION_TTL_MS / 1000,
 } as const;
 
-// --- request-scoped helpers (route handlers / server components only) ---
-
 export async function getSessionToken(): Promise<string | null> {
   const store = await cookies();
   return store.get(SESSION_COOKIE)?.value ?? null;

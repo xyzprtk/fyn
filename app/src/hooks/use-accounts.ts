@@ -11,6 +11,7 @@ type CreateAccountInput = {
 }
 
 type UpdateAccountInput = CreateAccountInput & { id: number }
+type AccountMutationInput = CreateAccountInput | UpdateAccountInput
 
 async function parseError(res: Response): Promise<never> {
   let message = `Request failed (${res.status})`
@@ -24,6 +25,20 @@ async function parseError(res: Response): Promise<never> {
     // keep the status-based message
   }
   throw new Error(message)
+}
+
+async function saveAccount(
+  method: "POST" | "PATCH",
+  input: AccountMutationInput,
+): Promise<Account> {
+  const res = await fetch("/api/accounts", {
+    method,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) return parseError(res)
+  const data = (await res.json()) as { account: Account }
+  return data.account
 }
 
 export function useAccounts(initialData?: Account[]) {
@@ -43,16 +58,7 @@ export function useAccounts(initialData?: Account[]) {
 export function useCreateAccount() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: CreateAccountInput): Promise<Account> => {
-      const res = await fetch("/api/accounts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      })
-      if (!res.ok) return parseError(res)
-      const data = (await res.json()) as { account: Account }
-      return data.account
-    },
+    mutationFn: (input: CreateAccountInput) => saveAccount("POST", input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["accounts"] })
     },
@@ -75,16 +81,7 @@ export function useDeleteAccount() {
 export function useUpdateAccount() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: UpdateAccountInput): Promise<Account> => {
-      const res = await fetch("/api/accounts", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      })
-      if (!res.ok) return parseError(res)
-      const data = (await res.json()) as { account: Account }
-      return data.account
-    },
+    mutationFn: (input: UpdateAccountInput) => saveAccount("PATCH", input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["accounts"] })
     },
