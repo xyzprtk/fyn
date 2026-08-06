@@ -119,3 +119,49 @@ with `pnpm start` for application timings. `pnpm perf:http` reports cold and
 warm server timings, response status, and HTML/JSON bytes. Browser hydration,
 chart loading, and long tasks should be checked in DevTools when a UI regression
 is suspected.
+
+## Optimization Notes
+
+This branch contains a measured performance pass. The changes target the parts
+that made the app feel slow without replacing SQLite, Drizzle, Recharts, or the
+synchronous parser flow.
+
+### Database and API reads
+
+- Added `tx_date_idx` for all-account date range queries.
+- Replaced the old account/date index with `tx_account_date_id_idx` for stable account pagination.
+- Added `tx_account_category_date_idx` for filtered transaction views.
+- Rewrote dashboard statistics to use focused SQL aggregates instead of loading every matching transaction into JavaScript.
+- Reused monthly aggregate results for long date ranges instead of scanning the same range twice.
+- Kept the API response shapes, transaction hashes, import deduplication, and financial calculations unchanged.
+
+### Dashboard and client behavior
+
+- Server-rendered the initial dashboard accounts and statistics so summary cards do not wait for a duplicate client fetch.
+- Deferred Recharts until after the summary content loads, with reserved chart skeleton space.
+- Increased cache lifetimes for stable account, rule, and import metadata.
+- Disabled unnecessary refetches when the browser window regains focus.
+- Added optimistic transaction edits with rollback on failure and immediate stats invalidation.
+
+### Statement parsing
+
+- PDF table-backed statements no longer run a second full-page text extraction pass.
+- XLSX files use openpyxl read-only iteration instead of materializing a pandas DataFrame.
+- Removed the unused pandas parser dependency.
+- Added privacy-safe parser timing logs containing only file kind, page count, row counts, and duration.
+
+### Measured results
+
+The measurements used isolated synthetic ledgers and production-style `pnpm start`:
+
+| Path | Before at 50k rows | After at 50k rows |
+|---|---:|---:|
+| Dashboard stats | 689 ms | 293 ms |
+| Transaction page 1 | 117 ms | 13 ms |
+| Transaction page 1000 | Not measured | 33 ms |
+| Dashboard first-load bundle | 344 kB | 229 kB |
+
+At 100k rows, warm stats improved from approximately 1,451 ms to 592 ms.
+Development-mode first requests can still be slow because Next.js compiles routes
+on demand. Compare with production mode before diagnosing application code, and
+ensure only one web process owns port `3000`.
