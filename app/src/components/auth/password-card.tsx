@@ -16,12 +16,21 @@ import { Label } from "@/components/ui/label"
 import { MotionButton } from "@/components/ui/motion-button"
 import { errorCode } from "@/server/http"
 
-const ERROR_MESSAGES: Record<string, string> = {
-  invalid_password: "Incorrect password.",
-  password_required: "Enter your password.",
-  password_too_short: "Use at least 8 characters.",
-  password_already_set: "Password is already set — log in instead.",
-  password_not_set: "No password yet — create one first.",
+function errorMessage(code: string | null): string {
+  switch (code) {
+    case "invalid_password":
+      return "Incorrect credentials."
+    case "password_required":
+      return "Enter your password."
+    case "password_too_short":
+      return "Use at least 8 characters."
+    case "password_already_set":
+      return "Password is already set — log in instead."
+    case "password_not_set":
+      return "No password yet — create one first."
+    default:
+      return "Something went wrong. Try again."
+  }
 }
 
 export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
@@ -53,7 +62,7 @@ export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
       })
       if (!res.ok) {
         const code = errorCode(await res.json().catch(() => null))
-        setError((code && ERROR_MESSAGES[code]) ?? "Something went wrong. Try again.")
+        setError(errorMessage(code))
         return
       }
       router.replace("/dashboard")

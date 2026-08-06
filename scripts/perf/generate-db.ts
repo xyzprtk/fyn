@@ -33,6 +33,7 @@ function readPath(): string {
 function main() {
   const count = readCount();
   const dbPath = readPath();
+  const fixturePassword = process.env.FYN_PERF_PASSWORD ?? randomBytes(32).toString("hex");
   const db = createDb(dbPath);
   migrate(db, { migrationsFolder: path.resolve(process.cwd(), "drizzle") });
 
@@ -72,7 +73,7 @@ function main() {
       tx.insert(transactions).values(batch).run();
     }
 
-    tx.insert(settings).values({ key: "password_hash", value: passwordHash("performance-password") }).run();
+    tx.insert(settings).values({ key: "password_hash", value: passwordHash(fixturePassword) }).run();
     tx.insert(sessions).values({
       token: randomBytes(32).toString("hex"),
       expiresAt: new Date(Date.now() + 30 * DAY_MS),
@@ -85,7 +86,7 @@ function main() {
     dbPath,
     rows: count,
     cookie: `fyn_session=${session.token}`,
-    password: "performance-password",
+    password: fixturePassword,
   }, null, 2));
 }
 

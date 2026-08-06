@@ -6,7 +6,7 @@ const requireServices = process.env.FYN_REQUIRE_SERVICES === "1";
 let output = "";
 try {
   output = execFileSync("ss", ["-ltnp"], { encoding: "utf8" });
-} catch (error) {
+} catch {
   if (requireServices) throw new Error("ss is required for strict port checks");
   console.log("port check skipped: ss is not available on this platform");
   process.exit(0);

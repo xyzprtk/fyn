@@ -50,10 +50,6 @@ class ParseOutcome:
     warnings: list[str] = field(default_factory=list)
 
 
-# ---------------------------------------------------------------------------
-# amount parsing
-# ---------------------------------------------------------------------------
-
 _DR_CR_SUFFIX_RE = re.compile(r"[\s(]*(dr|cr)\)?\.?$", re.IGNORECASE)
 _CURRENCY_RE = re.compile(r"₹|\b(?:rs|inr)\b\.?", re.IGNORECASE)
 
@@ -106,10 +102,6 @@ def apply_hint(value: float, hint: str | None) -> float:
         return abs(value)
     return value
 
-
-# ---------------------------------------------------------------------------
-# date parsing
-# ---------------------------------------------------------------------------
 
 _FALLBACK_FORMATS = (
     "%Y-%m-%d",
@@ -178,11 +170,6 @@ def parse_numeric_date(text: str) -> tuple[date, bool] | None:
     return None
 
 
-# ---------------------------------------------------------------------------
-# header matching
-# ---------------------------------------------------------------------------
-
-
 def _norm_header(cell: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", cell.lower()).strip()
 
@@ -236,11 +223,6 @@ def find_header(
     if best is None:
         return None, None
     return best
-
-
-# ---------------------------------------------------------------------------
-# profiles + engine
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)

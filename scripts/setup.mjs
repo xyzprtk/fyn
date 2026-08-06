@@ -30,6 +30,7 @@ function run(label, command, args) {
   }
 }
 
+run("install root dependencies", "pnpm", ["install"]);
 run("install app dependencies", "pnpm", ["--dir", "app", "install"]);
 
 if (existsSync(venvDir)) {
