@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 const baseUrl = process.env.FYN_BASE_URL ?? "http://127.0.0.1:3000";
 const cookie = process.env.FYN_COOKIE ?? "";
 const runs = Number.parseInt(process.env.FYN_RUNS ?? "2", 10);
+const transactionPage = Number.parseInt(process.env.FYN_TX_PAGE ?? "1", 10);
 const targets = [
   ["dashboard", "/dashboard"],
   ["transactions", "/transactions"],
@@ -12,7 +13,7 @@ const targets = [
   ["rules", "/api/category-rules"],
   ["imports", "/api/imports"],
   ["stats", "/api/stats?from=2024-01-01&to=2026-12-31"],
-  ["transactions-api", "/api/transactions?page=1"],
+  ["transactions-api", `/api/transactions?page=${transactionPage}`],
 ];
 
 async function measure(path) {

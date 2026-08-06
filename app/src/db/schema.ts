@@ -39,11 +39,13 @@ export const transactions = table(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (tx) => [
-    t.uniqueIndex("tx_hash_account_idx").on(tx.accountId, tx.hash),
-    t.index("tx_account_date_idx").on(tx.accountId, tx.date),
-    t.index("tx_category_idx").on(tx.category),
-  ],
+    (tx) => [
+      t.uniqueIndex("tx_hash_account_idx").on(tx.accountId, tx.hash),
+      t.index("tx_date_idx").on(tx.date),
+      t.index("tx_account_date_id_idx").on(tx.accountId, tx.date, tx.id),
+      t.index("tx_account_category_date_idx").on(tx.accountId, tx.category, tx.date),
+      t.index("tx_category_idx").on(tx.category),
+    ],
 );
 
 export const imports = table("imports", {
