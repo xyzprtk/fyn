@@ -26,6 +26,7 @@ export function useCategoryRules() {
       if (!response.ok) return parseError(response)
       return ((await response.json()) as { rules: CategoryRule[] }).rules
     },
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -85,6 +86,7 @@ export function useImportHistory() {
       if (!response.ok) return parseError(response)
       return ((await response.json()) as { imports: ImportHistoryItem[] }).imports
     },
+    staleTime: 60_000,
   })
 }
 

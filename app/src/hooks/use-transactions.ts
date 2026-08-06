@@ -65,8 +65,34 @@ export function useUpdateTransaction() {
       const data = (await response.json()) as { transaction: TransactionListRow }
       return data.transaction
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["transactions"] })
+    onMutate: async (patch) => {
+      await queryClient.cancelQueries({ queryKey: ["transactions"] })
+      const previous = queryClient.getQueriesData<TransactionListResponse>({ queryKey: ["transactions"] })
+      queryClient.setQueriesData<TransactionListResponse>({ queryKey: ["transactions"] }, (data) => {
+        if (!data) return data
+        return {
+          ...data,
+          rows: data.rows.map((row) => row.id !== patch.id ? row : {
+            ...row,
+            ...(patch.description === undefined ? {} : { description: patch.description }),
+            ...(patch.amount === undefined ? {} : { amount: patch.amount, type: patch.amount < 0 ? "debit" : "credit" }),
+            ...(patch.category === undefined ? {} : { category: patch.category }),
+            edited: true,
+          }),
+        }
+      })
+      return { previous }
+    },
+    onError: (_error, _patch, context) => {
+      for (const [queryKey, data] of context?.previous ?? []) {
+        queryClient.setQueryData(queryKey, data)
+      }
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueriesData<TransactionListResponse>({ queryKey: ["transactions"] }, (data) => {
+        if (!data) return data
+        return { ...data, rows: data.rows.map((row) => row.id === updated.id ? updated : row) }
+      })
       void queryClient.invalidateQueries({ queryKey: ["stats"] })
     },
   })

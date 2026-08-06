@@ -18,7 +18,7 @@ async function parseError(response: Response): Promise<never> {
   throw new Error(message)
 }
 
-export function useStats(filters: StatsFilters) {
+export function useStats(filters: StatsFilters, initialData?: StatsResponse) {
   return useQuery({
     queryKey: ["stats", filters.from ?? "", filters.to ?? "", filters.accountId ?? "all"],
     queryFn: async (): Promise<StatsResponse> => {
@@ -30,5 +30,7 @@ export function useStats(filters: StatsFilters) {
       if (!response.ok) return parseError(response)
       return (await response.json()) as StatsResponse
     },
+    initialData,
+    staleTime: 10_000,
   })
 }

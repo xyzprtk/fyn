@@ -26,7 +26,7 @@ async function parseError(res: Response): Promise<never> {
   throw new Error(message)
 }
 
-export function useAccounts() {
+export function useAccounts(initialData?: Account[]) {
   return useQuery({
     queryKey: ["accounts"],
     queryFn: async (): Promise<Account[]> => {
@@ -35,6 +35,8 @@ export function useAccounts() {
       const data = (await res.json()) as { accounts: Account[] }
       return data.accounts
     },
+    initialData,
+    staleTime: 5 * 60_000,
   })
 }
 
