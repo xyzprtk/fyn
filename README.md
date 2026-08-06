@@ -24,10 +24,11 @@ through Next.js route handlers.
 ## Quickstart
 
 ```sh
-pnpm install   # root dev tooling (concurrently)
-pnpm run setup  # app deps, python venv, parser deps, db migrations + seed
-pnpm dev       # web on :3000, parser on :8000
+pnpm run dev:setup  # install everything, prepare the database, then start both services
 ```
+
+For later starts, use `pnpm dev` directly. It keeps the normal development restart
+fast without reinstalling dependencies.
 
 First run redirects to `/setup` to create a local password.
 
@@ -35,7 +36,8 @@ First run redirects to `/setup` to create a local password.
 
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Run web + parser together |
+| `pnpm dev` | Run web + parser together after setup |
+| `pnpm run dev:setup` | Install dependencies, prepare the database, and start web + parser |
 | `pnpm parser` | Run only the parser (uvicorn, reload) |
 | `pnpm migrate` | Apply Drizzle migrations |
 | `pnpm test` | Vitest (app) + pytest (parser) |
@@ -49,7 +51,7 @@ Parser API docs (while running): http://localhost:8000/docs
 
 ## First-run checklist
 
-1. Run `pnpm install && pnpm run setup && pnpm dev`.
+1. Run `pnpm run dev:setup`.
 2. Open `http://localhost:3000` and set the local password.
 3. Open Settings and add an account with its bank parser hint.
 4. Upload a PDF, CSV, XLSX, or XLS statement and review the staging rows.

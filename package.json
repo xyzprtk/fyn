@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "concurrently -n web,parser -c blue,magenta \"pnpm --dir app dev\" \"pnpm parser\"",
+    "dev:setup": "pnpm run setup && pnpm dev",
     "parser": "cd parser && .venv/bin/uvicorn main:app --port 8000 --reload",
     "setup": "node scripts/setup.mjs",
     "build": "pnpm --dir app build",
