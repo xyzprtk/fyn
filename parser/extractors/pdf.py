@@ -22,23 +22,25 @@ def extract_pdf(data: bytes, filename: str) -> RawDoc:
         raise ExtractionError("pdfplumber is not installed") from exc
 
     rows: list[list[str]] = []
-    texts: list[str] = []
+    text = ""
+    page_count = 0
     try:
         with pdfplumber.open(io.BytesIO(data)) as pdf:
-            pages = list(pdf.pages)
+            pages = pdf.pages
+            page_count = len(pages)
             for page in pages:
                 rows.extend(_page_rows(page, settings=None))
             if not rows:
                 for page in pages:
                     rows.extend(_page_rows(page, settings=_TEXT_STRATEGY))
-            for page in pages:
-                texts.append(page.extract_text() or "")
+            if not rows:
+                text = "\n".join(page.extract_text() or "" for page in pages)
     except Exception as exc:
         raise ExtractionError(f"could not read pdf: {exc}") from exc
 
-    if not rows and not any(text.strip() for text in texts):
+    if not rows and not text.strip():
         raise ExtractionError("no extractable text or tables in pdf")
-    return RawDoc(filename=filename, kind="pdf", rows=rows, text="\n".join(texts))
+    return RawDoc(filename=filename, kind="pdf", rows=rows, text=text, page_count=page_count)
 
 
 def _page_rows(page, settings: dict | None) -> list[list[str]]:

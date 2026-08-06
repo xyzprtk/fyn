@@ -10,6 +10,8 @@ type CreateAccountInput = {
   accountNumber?: string
 }
 
+type UpdateAccountInput = CreateAccountInput & { id: number }
+
 async function parseError(res: Response): Promise<never> {
   let message = `Request failed (${res.status})`
   try {
@@ -24,7 +26,7 @@ async function parseError(res: Response): Promise<never> {
   throw new Error(message)
 }
 
-export function useAccounts() {
+export function useAccounts(initialData?: Account[]) {
   return useQuery({
     queryKey: ["accounts"],
     queryFn: async (): Promise<Account[]> => {
@@ -33,6 +35,8 @@ export function useAccounts() {
       const data = (await res.json()) as { accounts: Account[] }
       return data.accounts
     },
+    initialData,
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -61,6 +65,25 @@ export function useDeleteAccount() {
     mutationFn: async (id: number): Promise<void> => {
       const res = await fetch(`/api/accounts?id=${id}`, { method: "DELETE" })
       if (!res.ok) return parseError(res)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["accounts"] })
+    },
+  })
+}
+
+export function useUpdateAccount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: UpdateAccountInput): Promise<Account> => {
+      const res = await fetch("/api/accounts", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(input),
+      })
+      if (!res.ok) return parseError(res)
+      const data = (await res.json()) as { account: Account }
+      return data.account
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["accounts"] })

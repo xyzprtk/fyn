@@ -1,6 +1,7 @@
 """Endpoint contract tests for POST /parse."""
 
 import io
+import logging
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -23,6 +24,17 @@ def test_health():
     res = client.get("/health")
     assert res.status_code == 200
     assert res.json() == {"status": "ok"}
+
+
+def test_parse_logs_safe_timing(caplog):
+    with caplog.at_level(logging.INFO, logger="fyn.parser"):
+        res = upload("federal.csv", (FIXTURES / "federal.csv").read_bytes())
+
+    assert res.status_code == 200
+    assert "parse_complete kind=csv pages=1" in caplog.text
+    assert "extracted_rows=" in caplog.text
+    assert "parsed_rows=" in caplog.text
+    assert "federal.csv" not in caplog.text
 
 
 def test_parse_federal_contract():

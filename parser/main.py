@@ -8,6 +8,9 @@ Bank hint is accepted both as a query param (?bank=generic) and as a
 multipart form field, so curl checks and the web proxy both work.
 """
 
+import logging
+from time import perf_counter
+
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
 
@@ -16,6 +19,7 @@ from models import ParseResponse, ParsedRow, StatementPeriod
 from parsers.registry import resolve
 
 app = FastAPI(title="fyn parser", version="0.3.0")
+logger = logging.getLogger("fyn.parser")
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # keep in sync with the web upload limit
 
@@ -31,6 +35,7 @@ async def parse(
     bank: str | None = Query(default=None),
     bank_form: str | None = Form(default=None, alias="bank"),
 ):
+    started = perf_counter()
     data = await file.read()
     if not data:
         return _unparseable("empty file")
@@ -49,6 +54,14 @@ async def parse(
 
     parser = resolve(bank or bank_form, raw)
     outcome = parser.parse(raw)
+    logger.info(
+        "parse_complete kind=%s pages=%d extracted_rows=%d parsed_rows=%d duration_ms=%.2f",
+        kind,
+        raw.page_count,
+        len(raw.rows),
+        len(outcome.rows),
+        (perf_counter() - started) * 1000,
+    )
     return ParseResponse(
         bank=parser.bank,
         period=_derive_period(outcome.rows),

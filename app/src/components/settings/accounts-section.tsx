@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Trash } from "@phosphor-icons/react"
+import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ import {
   useAccounts,
   useCreateAccount,
   useDeleteAccount,
+  useUpdateAccount,
 } from "@/hooks/use-accounts"
 import { BANKS, bankLabel, type BankKey } from "@/lib/banks"
 import type { Account } from "@/server/queries"
@@ -151,7 +152,45 @@ export function AccountsSection() {
 
 function AccountRow({ account }: { account: Account }) {
   const deleteAccount = useDeleteAccount()
+  const updateAccount = useUpdateAccount()
   const [confirming, setConfirming] = React.useState(false)
+  const [editing, setEditing] = React.useState(false)
+  const [name, setName] = React.useState(account.name)
+  const [bank, setBank] = React.useState<BankKey>(account.bank as BankKey)
+  const [accountNumber, setAccountNumber] = React.useState(account.accountNumber ?? "")
+  const [error, setError] = React.useState<string | null>(null)
+
+  if (editing) {
+    return (
+      <div className="grid gap-2 px-4 py-3 sm:grid-cols-[1fr_150px_130px_auto] sm:items-center">
+        <Input value={name} aria-label="Edit account name" onChange={(event) => setName(event.target.value)} maxLength={80} />
+        <Select value={bank} onValueChange={(value) => setBank(value as BankKey)}>
+          <SelectTrigger aria-label="Edit account bank" className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>{BANKS.map((option) => <SelectItem key={option.key} value={option.key}>{option.label}</SelectItem>)}</SelectContent>
+        </Select>
+        <Input value={accountNumber} aria-label="Edit account number" onChange={(event) => setAccountNumber(event.target.value)} maxLength={24} placeholder="Last 4 digits" />
+        <div className="flex justify-end gap-1">
+          <Button
+            type="button"
+            size="icon-sm"
+            aria-label="Save account"
+            disabled={updateAccount.isPending}
+            onClick={() => {
+              setError(null)
+              updateAccount.mutate(
+                { id: account.id, name: name.trim(), bank, accountNumber: accountNumber.trim() },
+                { onSuccess: () => setEditing(false), onError: (value) => setError(value.message) },
+              )
+            }}
+          >
+            <Check size={15} />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Cancel account editing" onClick={() => setEditing(false)}><X size={15} /></Button>
+        </div>
+        {error && <p role="alert" className="text-xs text-destructive sm:col-span-4">{error}</p>}
+      </div>
+    )
+  }
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -162,6 +201,9 @@ function AccountRow({ account }: { account: Account }) {
           {account.accountNumber ? ` · ${account.accountNumber}` : ""}
         </p>
       </div>
+      <Button variant="ghost" size="icon-sm" aria-label={`Edit ${account.name}`} onClick={() => setEditing(true)}>
+        <PencilSimple size={15} />
+      </Button>
       {confirming ? (
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Delete?</span>

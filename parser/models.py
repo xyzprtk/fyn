@@ -31,6 +31,7 @@ class RawDoc:
     kind: DocKind
     rows: list[list[str]]
     text: str
+    page_count: int = 1
 
 
 class ParsedRow(BaseModel):
