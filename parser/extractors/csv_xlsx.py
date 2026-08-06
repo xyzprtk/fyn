@@ -2,8 +2,8 @@
 
 CSV uses the stdlib csv module on purpose: bank CSV exports are frequently
 ragged (preamble lines with fewer columns than the table), which pandas'
-C engine rejects. XLSX goes through pandas + openpyxl with dtype=str so
-every cell arrives as a raw string for the bank parsers to interpret.
+C engine rejects. XLSX uses openpyxl's read-only iterator so large workbooks do
+not need to be materialized as a pandas DataFrame.
 """
 
 import csv
@@ -39,28 +39,26 @@ def extract_csv(data: bytes, filename: str) -> RawDoc:
     ]
     if not rows:
         raise ExtractionError("no rows found in csv")
-    return RawDoc(filename=filename, kind="csv", rows=rows, text=text)
+    return RawDoc(filename=filename, kind="csv", rows=rows, text=text, page_count=1)
 
 
 def extract_xlsx(data: bytes, filename: str) -> RawDoc:
+    workbook = None
     try:
-        import pandas as pd
+        from openpyxl import load_workbook
 
-        frame = pd.read_excel(
-            io.BytesIO(data),
-            header=None,
-            dtype=str,
-            keep_default_na=False,
-            sheet_name=0,
-            engine="openpyxl",
-        )
+        workbook = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        sheet = workbook.worksheets[0]
+        rows = [
+            ["" if cell is None else str(cell).strip() for cell in row]
+            for row in sheet.iter_rows(values_only=True)
+        ]
     except Exception as exc:
         raise ExtractionError(f"could not read xlsx: {exc}") from exc
+    finally:
+        if workbook is not None:
+            workbook.close()
 
-    rows = [
-        [str(cell).strip() for cell in row]
-        for row in frame.itertuples(index=False, name=None)
-    ]
     if not rows:
         raise ExtractionError("no rows found in xlsx")
-    return RawDoc(filename=filename, kind="xlsx", rows=rows, text="")
+    return RawDoc(filename=filename, kind="xlsx", rows=rows, text="", page_count=1)

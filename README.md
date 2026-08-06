@@ -41,6 +41,7 @@ First run redirects to `/setup` to create a local password.
 | `pnpm test` | Vitest (app) + pytest (parser) |
 | `pnpm perf:fixture 50000 /tmp/fyn-perf.db` | Create an isolated synthetic ledger for performance checks |
 | `FYN_COOKIE='fyn_session=...' pnpm perf:http` | Time authenticated pages and APIs |
+| `pnpm perf:parser` | Benchmark representative CSV, XLSX, and multi-page PDF extraction |
 
 Parser API docs (while running): http://localhost:8000/docs
 
