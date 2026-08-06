@@ -13,6 +13,8 @@
     "setup": "node scripts/setup.mjs",
     "build": "pnpm --dir app build",
     "start": "pnpm --dir app start",
+    "perf:fixture": "pnpm --dir app exec tsx ../scripts/perf/generate-db.ts",
+    "perf:http": "node scripts/perf/http-timing.mjs",
     "migrate": "pnpm --dir app db:migrate",
     "test": "pnpm --dir app test && pnpm test:parser",
     "test:parser": "cd parser && .venv/bin/pytest"

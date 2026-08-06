@@ -39,6 +39,8 @@ First run redirects to `/setup` to create a local password.
 | `pnpm parser` | Run only the parser (uvicorn, reload) |
 | `pnpm migrate` | Apply Drizzle migrations |
 | `pnpm test` | Vitest (app) + pytest (parser) |
+| `pnpm perf:fixture 50000 /tmp/fyn-perf.db` | Create an isolated synthetic ledger for performance checks |
+| `FYN_COOKIE='fyn_session=...' pnpm perf:http` | Time authenticated pages and APIs |
 
 Parser API docs (while running): http://localhost:8000/docs
 
@@ -77,3 +79,7 @@ silently dropping them.
   unless you also want to remove retained statements.
 - **Testing an isolated database** — set `FYN_DB_PATH=/tmp/fyn.db` for setup and
   development. This keeps acceptance checks away from your normal local ledger.
+- **Performance checks** — create a fixture with `pnpm perf:fixture 50000 /tmp/fyn-perf.db`,
+  run the app with `FYN_DB_PATH=/tmp/fyn-perf.db`, and pass the generated cookie to
+  `pnpm perf:http`. Compare `pnpm dev` with `pnpm build && pnpm start`; keep only one
+  process listening on ports `3000` and `8000` during a run.
