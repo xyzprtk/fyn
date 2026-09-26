@@ -52,7 +52,9 @@ Parser API docs (while running): http://localhost:8000/docs
 ## First-run checklist
 
 1. Run `pnpm run dev:setup`.
-2. Open `http://localhost:3000` and set the local password.
+2. Open the printed URL (e.g. `http://localhost:3000`) and set the local password.
+   The dev server picks the first free port from 3000 upward and prints it on
+   startup (`fyn web → http://localhost:<port>`). Set `PORT` to pin one.
 3. Open Settings and add an account with its bank parser hint.
 4. Upload a PDF, CSV, XLSX, or XLS statement and review the staging rows.
 5. Exclude or correct flagged rows, then save the import.
