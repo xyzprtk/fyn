@@ -117,29 +117,17 @@ export function PasswordCard({ mode }: { mode: "login" | "setup" }) {
           <MotionButton type="submit" className="w-full" disabled={pending}>
             {pending ? "Please wait…" : isSetup ? "Create password" : "Log in"}
           </MotionButton>
-          <p className="text-center text-xs text-muted-foreground">
-            {isSetup ? (
-              <>
-                Already set up?{" "}
-                <Link
-                  href="/"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  Log in
-                </Link>
-              </>
-            ) : (
-              <>
-                First run?{" "}
-                <Link
-                  href="/setup"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  Set a password
-                </Link>
-              </>
-            )}
-          </p>
+          {isSetup && (
+            <p className="text-center text-xs text-muted-foreground">
+              Already set up?{" "}
+              <Link
+                href="/"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Log in
+              </Link>
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>
